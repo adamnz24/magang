@@ -7,12 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/test")
+@RequestMapping("/cabang")
 @RestController
 public class CabangController {
     private final CabangService cabangService;
@@ -20,23 +18,25 @@ public class CabangController {
     public CabangController(CabangService cabangService) {
         this.cabangService = cabangService;
     }
-@PreAuthorize("hasRole('ADMIN')")
-    @PostMapping()
-    public ResponseEntity<String> addCabang(@Validated @RequestBody Cabang cabang) {
+
+    @PostMapping
+    public ResponseEntity<String> addCabang(Cabang cabang,
+            @RequestHeader("name") String name) {
+        cabang.setName(name);
         Cabang savedCabang = CabangService.saveCabang(cabang);
         return ResponseEntity.ok("Data Kapal dengan ID : " + savedCabang.getIdcabang() +
                 " || dengan nama : " + savedCabang.getName() + " berhasil ditambahkan");
     }
-//@Secured("ROLE_ADMIN")
+
     @GetMapping
     public ResponseEntity<Page<Cabang>> findAllCabang(
-            @RequestHeader(defaultValue = "0") int page,
-            @RequestHeader(defaultValue = "10") int size) {
+            @RequestHeader(value = "page", defaultValue = "0") int page,
+            @RequestHeader(value = "size", defaultValue = "10") int size) {
         Page<Cabang> cabangPage = cabangService.getCabang(page, size);
         return ResponseEntity.ok(cabangPage);
     }
-    // Sort Users by Name in Ascending Order
-@PreAuthorize("hasRole('ADMIN')")
+
+
 @PutMapping
 public ResponseEntity<String> updateCabang(
         @RequestHeader("idcabang") int idcabang,
@@ -59,9 +59,9 @@ public ResponseEntity<String> updateCabang(
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
     }
     }
-@PreAuthorize("hasRole('ADMIN')")
+
     @DeleteMapping
-    public ResponseEntity<String> deleteCabang(@RequestHeader("idcabang") int idcabang) {
+    public ResponseEntity<String> deleteCabang(@RequestHeader(value = "idcabang", defaultValue = "0") int idcabang) {
         try {
             String result = cabangService.deleteCabang(idcabang);
             return ResponseEntity.ok(result);

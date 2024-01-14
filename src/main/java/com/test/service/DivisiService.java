@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -37,20 +36,8 @@ public class DivisiService {
         return divisiRepository.findAll(pageable);
     }
 
-    public Divisi getdivisiByid(int iddivisi) {
-        Optional<Divisi> optionalDivisi = Optional.ofNullable(divisiRepository.findByiddivisi(iddivisi));
-        return optionalDivisi.orElse(null);
-    }
-    public Page<Divisi> sortAndSearchDivisi(int page, int size, Sort.Order order, String search) {
-        return divisiRepository.findByNamadivisi(search, PageRequest.of(page, size, Sort.by(order)));
-    }
-
-    public Page<Divisi> sortDivisi(int page, int size, Sort.Order order) {
-        return divisiRepository.findAll(PageRequest.of(page, size, Sort.by(order)));
-    }
-
-    public List<Divisi> searchDivisi(String namadivisi) {
-        return divisiRepository.findByNamadivisi(namadivisi);
+    public Page<Divisi> searchDivisi(String keyword, int page, int size) {
+        return divisiRepository.findByNamadivisi(keyword, PageRequest.of(page, size));
     }
 
     public String deleteDivisi(int iddivisi) {

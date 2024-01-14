@@ -4,9 +4,11 @@ import com.test.entity.Biodata;
 import com.test.exception.CustomIllegalArgumentException;
 import com.test.repository.BiodataRepository;
 import org.springframework.data.domain.*;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -110,7 +112,18 @@ public class BiodataService {
 
         return biodataRepository.findAll(example, PageRequest.of(page, size, sort));
     }
-
+    public List<Biodata> getBiodataByDivision(String divisipenempatan) {
+        return biodataRepository.findBydivisipenempatan(divisipenempatan);
+    }
+    public long countBiodataByDivision(String divisipenempatan) {
+        return biodataRepository.countBydivisipenempatan(divisipenempatan);
+    }
+    public long countAllBiodata() {
+        return biodataRepository.count();
+    }
+    public long countBiodataByType(String jenismagang) {
+        return biodataRepository.countByjenismagang(jenismagang);
+    }
     public String deleteBiodata(int id) {
         Optional<Biodata> biodataOptional = biodataRepository.findById(id);
 
@@ -120,6 +133,11 @@ public class BiodataService {
         } else {
             throw new CustomIllegalArgumentException("Biodata dengan ID " + id + " tidak ditemukan");
         }
+    }
+
+
+    public Biodata getUserByNpm(int npm) {
+        return biodataRepository.findByNpm(npm);
     }
 
 

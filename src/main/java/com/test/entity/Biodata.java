@@ -1,42 +1,82 @@
 package com.test.entity;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.util.Date;
 
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.Collection;
+
+@Getter
+@Setter
 @Data
 @AllArgsConstructor
-@Entity
 @NoArgsConstructor
+@Entity
 @Table(name = "biodata")
 public class Biodata {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int id ;
-    @Column(unique = true)
-    public int npm;
+    private Long id;
 
-    public String namalengkap;
-    @Column(unique = true)
-    public int NIK;
-    public String TTL;
-    public String jeniskelamin;
-    public String namainstansi;
-    public String jenjangpendidikan;
-    public String jurusan;
-    @Column(unique = true)
-    public int notelp;
-    public String jenismagang;
-    public String programmagang;
-    public Date bulanplaksanaan;
-    public String durasimagang;
-    public String alamat;
-    public String namaortu;
-    public String pekerjaanortu;
-    public String divisipenempatan;
 
-    public String getName() {
-        return namalengkap;
+    private int npm;
+
+    @Column(nullable = false)
+    private String namalengkap;
+
+    @Column(unique = true, nullable = false)
+    private int NIK;
+
+    @Column(nullable = false)
+    private String TTL;
+
+    @Column(nullable = false)
+    private String jeniskelamin;
+
+    @Column(nullable = false)
+    private String namainstansi;
+
+    @Column(nullable = false)
+    private String jenjangpendidikan;
+
+    @Column(nullable = false)
+    private String jurusan;
+
+    @Column(unique = true, nullable = false)
+    private int notelp;
+
+    @Column(nullable = false)
+    private String jenismagang;
+
+    @Column(nullable = false)
+    private String programmagang;
+
+    @Column(nullable = false)
+    private String bulanplaksanaan;
+
+    @Column(nullable = false)
+    private String durasimagang;
+
+    @Column(nullable = false)
+    private String alamat;
+
+    @Column(nullable = false)
+    private String namaortu;
+
+    @Column(nullable = false)
+    private String pekerjaanortu;
+
+    @Column(nullable = false)
+    private String divisipenempatan;
+
+    // Tambahkan getter dan setter jika belum ada
+
+    @OneToMany(mappedBy = "biodata")
+    private Collection<Absensi> absensi;
+
+
+
+    public void setAbsensi(Collection<Absensi> absensi) {
+        this.absensi = absensi;
     }
 }

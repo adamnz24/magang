@@ -1,55 +1,60 @@
 package com.test.entity;
-
+import lombok.*;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+
+@SuppressWarnings("ALL")
 @Data
 @AllArgsConstructor
-@Entity
 @NoArgsConstructor
+@Getter
+@Setter
+@Entity
 @Table(name = "absensi")
-
 public class Absensi {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "npm", referencedColumnName = "npm")
-    public Biodata biodata;
+    private Biodata biodata;
+
+    @Column(nullable = false)
+    private String status; // "checkin" atau "checkout"
+
+    @Column(nullable = false)
+    private LocalDateTime timestamp;
+
+    @Column(nullable = false)
+    private String location; // Memisahkan latitude dan longitude mungkin lebih baik
+
+    private String name;
+
+    private String typemagang;
+
+    private String kapal;
+
+    private String divisi;
 
 
-    public String status; // "checkin" atau "checkout"
+    private LocalDateTime waktuMasuk;
 
 
-    public LocalDateTime timestamp;
+    private LocalDateTime waktuKeluar;
 
+    private int radius;
 
-    public String location;
+    // Tambahkan getter dan setter jika belum ada
+    public int getNpm() {
+        return (biodata != null) ? biodata.getNpm() : 0;
+    }
 
-    // Tambahkan kolom checkoutStatus
+    public void setNpm(int npm) {
 
-    // Tambahkan kolom-kolom tambahan
-
-    public String name;
-
-
-    public String typemagang;
-
-
-    public String kapal;
-
-
-    public String divisi;
-
-
-    public LocalDateTime waktuMasuk;
-
-
-    public LocalDateTime waktuKeluar;
+        if (biodata != null) {
+            biodata.setNpm(npm);
+        }
+    }
 }
-
-

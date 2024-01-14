@@ -1,4 +1,5 @@
 package com.test.controller;
+
 import com.test.entity.Biodata;
 import com.test.exception.CustomIllegalArgumentException;
 import com.test.service.BiodataService;
@@ -9,12 +10,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 @RestController
 @Validated
-@RequestMapping("/user")  // Base mapping for the controller
+@RequestMapping("/biodata")
 public class BiodataController {
 @Autowired
     private final BiodataService biodataService ;
@@ -23,41 +26,75 @@ public class BiodataController {
         this.biodataService = biodataService;
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<String> addBiodata(@Validated @RequestBody Biodata biodata) {
+    @PostMapping
+    public ResponseEntity<String> addBiodata(
+            @RequestHeader("npm") int npm,
+            @RequestHeader("namalengkap") String namalengkap,
+            @RequestHeader("NIK") int NIK,
+            @RequestHeader("TTL") String TTL,
+            @RequestHeader("jeniskelamin") String jeniskelamin,
+            @RequestHeader("namainstansi") String namainstansi,
+            @RequestHeader("jenjangpendidikan") String jenjangpendidikan,
+            @RequestHeader("jurusan") String jurusan,
+            @RequestHeader("notelp") int notelp,
+            @RequestHeader("jenismagang") String jenismagang,
+            @RequestHeader("programmagang") String programmagang,
+            @RequestHeader("bulanplaksanaan") String bulanplaksanaan,
+            @RequestHeader("durasimagang") String durasimagang,
+            @RequestHeader("alamat") String alamat,
+            @RequestHeader("namaortu") String namaortu,
+            @RequestHeader("pekerjaanortu") String pekerjaanortu,
+            @RequestHeader("divisipenempatan") String divisipenempatan) {
+
         try {
-            Biodata existingBiodata = biodataService.getBiodataByNpm(biodata.getNpm());
+            Biodata existingBiodata = biodataService.getBiodataByNpm(npm);
 
             BiodataStatus biodataStatus = checkExistingBiodata(existingBiodata);
-            return switch (biodataStatus) {
-                case ALREADY_EXISTS -> ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body("Peserta dengan NPM " + biodata.getNpm() + " sudah terdaftar");
-                case DOES_NOT_EXIST -> {
+            switch (biodataStatus) {
+                case ALREADY_EXISTS:
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body("Peserta dengan NPM " + npm + " sudah terdaftar");
+                case DOES_NOT_EXIST:
+                    Biodata biodata = new Biodata();
+                    biodata.setNpm(npm);
+                    biodata.setNamalengkap(namalengkap);
+                    biodata.setNIK(NIK);
+                    biodata.setTTL(TTL);
+                    biodata.setJeniskelamin(jeniskelamin);
+                    biodata.setNamainstansi(namainstansi);
+                    biodata.setJenjangpendidikan(jenjangpendidikan);
+                    biodata.setJurusan(jurusan);
+                    biodata.setNotelp(notelp);
+                    biodata.setJenismagang(jenismagang);
+                    biodata.setProgrammagang(programmagang);
+                    biodata.setBulanplaksanaan(bulanplaksanaan);
+                    biodata.setDurasimagang(durasimagang);
+                    biodata.setAlamat(alamat);
+                    biodata.setNamaortu(namaortu);
+                    biodata.setPekerjaanortu(pekerjaanortu);
+                    biodata.setDivisipenempatan(divisipenempatan);
+
                     Biodata savedBiodata = biodataService.saveBiodata(biodata);
-                    yield ResponseEntity.status(HttpStatus.CREATED)
+                    return ResponseEntity.status(HttpStatus.CREATED)
                             .body("Data dengan NPM " + savedBiodata.getNpm() + " berhasil ditambahkan");
-                }
-                default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("An unexpected error occurred.");
-            };
+                default:
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("An unexpected error occurred.");
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while processing the request: " + e.getMessage());
         }
     }
-
-
     private enum BiodataStatus {
         ALREADY_EXISTS,
         DOES_NOT_EXIST
     }
-
     private BiodataStatus checkExistingBiodata(Biodata existingBiodata) {
         return (existingBiodata != null) ? BiodataStatus.ALREADY_EXISTS : BiodataStatus.DOES_NOT_EXIST;
     }
 
-
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<Object> getUsers(
             @RequestHeader(name = "page", defaultValue = "0") int page,
             @RequestHeader(name = "size", defaultValue = "10") int size,
@@ -138,15 +175,108 @@ private ResponseEntity<Object> handleResponse(Supplier<?> action, String message
     }
 
 //
-
-
-    @PutMapping("/updates")
-    public ResponseEntity<String> updateBiodata(@Validated @RequestBody Biodata biodata) {
+@GetMapping("/bla")
+public ResponseEntity<Object>getDivisi(@RequestHeader(name = "divisipenempatan",defaultValue = "") String divisipenempatan){
+   try {
+       return switch (determineOperation(divisipenempatan)){
+           case "by-divisi"->handleGroupByDivisionResponse(() -> biodataService.getBiodataByDivision(divisipenempatan), "Grouped by division");
+           default -> new ResponseEntity<>("Invalid operation", HttpStatus.BAD_REQUEST);
+       };
+   }catch (Exception e){
+       return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+   }
+}
+private String determineOperation(String divisipenempatan){
+    return switch (divisipenempatan.isEmpty() ? 0 : 1){
+        case 0 -> "all";
+        case 1 -> "by-divisi";
+        default -> "invalid";
+    };
+}
+private ResponseEntity<Object> handleGroupByDivisionResponse(Supplier<List<Biodata>> action, String message){
+    return handleResponse(action, message, "List");
+}
+    @GetMapping("/count")
+    public ResponseEntity<Object> countBiodataByDivision(
+            @RequestHeader(name = "divisipenempatan", defaultValue = "") String divisipenempatan) {
         try {
-            Biodata updatedBiodata = biodataService.updateBiodata(biodata);
-            return updatedBiodata != null ?
-                    ResponseEntity.ok("Data dengan NPM : " + updatedBiodata.getNpm() + " berhasil diupdate") :
-                    ResponseEntity.notFound().build();
+            return switch (determineOperations(divisipenempatan)) {
+                case "by-division" -> handleCountByDivisionResponse(() -> biodataService.countBiodataByDivision(divisipenempatan),divisipenempatan + "");
+                default -> new ResponseEntity<>("Invalid operation", HttpStatus.BAD_REQUEST);
+            };
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    private String determineOperations(String divisipenempatan) {
+        return divisipenempatan.isEmpty() ? "invalid" : "by-division";
+    }
+
+    // Menambah metode untuk menangani respons jumlah data berdasarkan divisi penempatan
+    private ResponseEntity<Object> handleCountByDivisionResponse(LongSupplier action, String message) {
+        try {
+            long countResult = action.getAsLong();
+            return new ResponseEntity<>( message +" ada " + " : "+ countResult+" peserta magang",HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error handling response: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @GetMapping("/countType")
+    public ResponseEntity<Object> countBiodataByType(
+        @RequestHeader(name="jenismagang",defaultValue = "") String jenismagang
+    ){
+        try {
+            long countResult = biodataService.countBiodataByType(jenismagang);
+            return new ResponseEntity<>("Jumlah semua data : "+ countResult+" peserta magang",HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error handling response: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @GetMapping("/countAll")
+    public ResponseEntity<Object> countAllBiodata() {
+        try {
+            long countResult = biodataService.countAllBiodata();
+            return new ResponseEntity<>("Jumlah semua data : "+ countResult+" peserta magang",HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error handling response: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @PutMapping
+    public ResponseEntity<String> updateBiodata(
+            @RequestHeader("npm") int npm,
+            @RequestHeader("namalengkap") String namalengkap,
+            @RequestHeader("NIK") int NIK,
+            @RequestHeader("TTL") String TTL,
+            @RequestHeader("jeniskelamin") String jeniskelamin,
+            @RequestHeader("namainstansi") String namainstansi,
+            @RequestHeader("jenjangpendidikan") String jenjangpendidikan,
+            @RequestHeader("jurusan") String jurusan,
+            @RequestHeader("notelp") int notelp,
+            @RequestHeader("jenismagang") String jenismagang,
+            @RequestHeader("programmagang") String programmagang,
+            @RequestHeader("bulanplaksanaan") String bulanplaksanaan,
+            @RequestHeader("durasimagang") String durasimagang,
+            @RequestHeader("alamat") String alamat,
+            @RequestHeader("namaortu") String namaortu,
+            @RequestHeader("pekerjaanortu") String pekerjaanortu,
+            @RequestHeader("divisipenempatan") String divisipenempatan) {
+
+        try {
+            Biodata existingBiodata = biodataService.getBiodataByNpm(npm);
+
+            BiodataStatus biodataStatus = checkExistingBiodata(existingBiodata);
+            switch (biodataStatus) {
+                case ALREADY_EXISTS:
+                    Biodata updatedBiodata = biodataService.updateBiodata(existingBiodata);
+                    return updatedBiodata != null ?
+                            ResponseEntity.ok("Data dengan NPM : " + updatedBiodata.getNpm() + " berhasil diupdate") :
+                            ResponseEntity.notFound().build();
+                case DOES_NOT_EXIST:
+                    return ResponseEntity.notFound().build(); // or handle as needed
+                default:
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("An unexpected error occurred.");
+            }
         } catch (CustomIllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Invalid request: " + e.getMessage());
@@ -156,8 +286,8 @@ private ResponseEntity<Object> handleResponse(Supplier<?> action, String message
         }
     }
 
-    @DeleteMapping("/deleteById/{id}")
-    public ResponseEntity<String> deleteBiodata(@PathVariable int id) {
+    @DeleteMapping
+    public ResponseEntity<String> deleteBiodata(@RequestHeader(value = "id", defaultValue = "0") int id) {
         try {
             String result = biodataService.deleteBiodata(id);
             return ResponseEntity.ok(result);
@@ -169,4 +299,5 @@ private ResponseEntity<Object> handleResponse(Supplier<?> action, String message
                     .body("An error occurred while processing the request: " + e.getMessage());
         }
     }
+
 }

@@ -36,15 +36,22 @@ public class KapalController {
 
     @GetMapping
     public ResponseEntity<Page<Kapal>> findAllBiodata(
-            @RequestHeader(defaultValue = "0") int page,
-            @RequestHeader(defaultValue = "10") int size) {
+            @RequestHeader(name = "page", defaultValue = "0") int page,
+            @RequestHeader(name = "size", defaultValue = "10") int size) {
         Page<Kapal> kapalPage = kapalService.getKapal(page, size);
         return ResponseEntity.ok(kapalPage);
     }
 
     @PutMapping
-    public ResponseEntity<String> updateKapal(@Validated @RequestBody Kapal kapal) {
+    public ResponseEntity<String> updateKapal(
+            @RequestHeader(name = "idkapal") int idkapal,
+            @RequestHeader(name = "namakapal") String namakapal,
+            @Validated Kapal kapal) {
         try {
+            // Set nilai idkapal dan namakapal dari request header ke objek kapal
+            kapal.setIdkapal(idkapal);
+            kapal.setNamakapal(namakapal);
+
             Kapal updatedKapal = kapalService.updateKapal(kapal);
             if (updatedKapal != null) {
                 return ResponseEntity.ok("Data Kapal dengan ID: " + updatedKapal.getIdkapal() + " berhasil diperbarui");
@@ -60,8 +67,9 @@ public class KapalController {
         }
     }
 
+
     @DeleteMapping
-    public ResponseEntity<String> deleteKapal(@PathVariable int idkapal) {
+    public ResponseEntity<String> deleteKapal(@RequestHeader("idkapal") int idkapal) {
         try {
             String result = kapalService.deleteKapal(idkapal);
             return ResponseEntity.ok(result);
